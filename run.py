@@ -1,6 +1,7 @@
 import requests
 import re
-import sys, time
+import sys, time, os
+from concurrent.futures import ThreadPoolExecutor
 
 
 # pornhub的m3u8下载器
@@ -10,6 +11,8 @@ class m3u8DownLoader:
         # 基础地址
         self.baseurl = self.base_url()
         self.num = 0
+        self.video_name = "video_name.txt"
+        self.video_url = "video_url.txt"
 
     def base_url(self) -> str:
         """获取传入链接的主拼接地址
@@ -50,20 +53,46 @@ class m3u8DownLoader:
         return new_response_list
 
     def get_download_addr(self, addr_list: list):
-        with open(f"{str(self.num)}.txt", 'w', encoding='utf-8') as f:
+        """将解析出来的地址保存
+        :return:None
+        """
+        with open(f"{self.video_url}", 'a', encoding='utf-8') as f:
             for addr_item in addr_list:
+                with open(self.video_name, 'a') as f1:
+                    f1.write(f'file \'{addr_item.split("?")[0]}\'\n')
                 f.write(self.baseurl + addr_item + "\n")
         print("写入完成")
         self.num += 1
 
+    def thread_pool(self, read):
+        """多线程调用
+        """
+        addr_list = self.get_source_url(read)
+        self.get_download_addr(addr_list)
+
+    def is_exist(self) -> bool:
+        flag = True
+        if os.path.isfile(self.video_name):
+            os.remove(self.video_name)
+            flag = True
+        if os.path.isfile(self.video_url):
+            os.remove(self.video_url)
+            flag = True
+        else:
+            flag = True
+        return flag
+
     def main(self):
-        for read in self.readfile():
-            addr_list = self.get_source_url(read)
-            self.get_download_addr(addr_list)
+        if self.is_exist():
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                for read in self.readfile():
+                    pool.submit(self.thread_pool, read)
+        else:
+            print("文件错误")
 
 
 if __name__ == "__main__":
     m3u8 = m3u8DownLoader(
-        "https://d1v-h.phncdn.com/hls/videos/202009/16/352343302/,1080P_4000K,720P_4000K,480P_2000K,240P_400K,_352343302.mp4.urlset/master.m3u8?ttl=1601987761&l=0&clientip=149.129.43.133&hash=103dfea3188dd9e8781e1f5337b23f0c"
+        "https://e1v-h.phncdn.com/hls/videos/202009/23/354356012/,1080P_4000K,720P_4000K,480P_2000K,240P_400K,_354356012.mp4.urlset/master.m3u8?validfrom=1602424205&validto=1602431405&ip=149.129.43.133&hdl=-1&hash=OYJXuQaoyrmlxmJ4H4FX3MPvN%2Bo%3D"
     )
     m3u8.main()
