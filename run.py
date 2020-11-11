@@ -96,3 +96,4 @@ if __name__ == "__main__":
         "https://e1v-h.phncdn.com/hls/videos/202009/23/354356012/,1080P_4000K,720P_4000K,480P_2000K,240P_400K,_354356012.mp4.urlset/master.m3u8?validfrom=1602424205&validto=1602431405&ip=149.129.43.133&hdl=-1&hash=OYJXuQaoyrmlxmJ4H4FX3MPvN%2Bo%3D"
     )
     m3u8.main()
+    print("测试输出")
